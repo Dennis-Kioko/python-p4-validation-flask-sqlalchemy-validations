@@ -1,19 +1,16 @@
-from flask import Flask, make_response
-from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import validates
+db = SQLAlchemy()
 
-from models import db, EmailAddress
+class EmailAddress(db.Model):
+    __tablename__ = 'emailaddress'
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String)
+    backup_email = db.Column(db.String)
 
-migrate = Migrate(app, db)
-
-db.init_app(app)
-
-@app.route('/')
-def index():
-    return 'Validations lab'
-
-if __name__ == '__main__':
-    app.run(port=5555, debug=True)
+    @validates('email', 'backup_email')
+    def validate_email(self, key, address):
+        if '@' not in address:
+            raise ValueError("Failed simple email validation")
+        return address
